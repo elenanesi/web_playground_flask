@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="/static/FairyStyleSheet.css">   
+    <script type="text/javascript">
+        // get back end data about products in contex
+        var analytics_items = {{ products | tojson | safe }};
+    </script>
+    <script src="/static/analytics.js"></script>
+    <script src="/static/consent_update.js"></script>
+
+    <title>{{ category | capitalize }}</title>
+</head>
+<body>
+    <h1>{{ category | capitalize }}</h1>
+    <div>
+        {% for product in products %}
+            <div>
+                <h2><a class="next" href="{{ url_for('product_detail', category=category, product_name=product.item_name) }}">{{ product.item_name }}</a></h2>
+                <p>{{ product.description }}</p>
+                <p>${{ product.price }}</p>
+            </div>
+        {% endfor %}
+    </div>
+
+
+<div class="cookie-banner" id="cookie-banner">
+
+    <p>This website uses cookies. Please select the types of cookies you want to accept:</p>
+    <div class="cookie-types">
+        <label> 
+            Strictly Necessary
+             <div class="toggle-switch">
+                <input type="checkbox" checked disabled>
+                <span class="slider"></span>   
+            </div>
+        </label>
+        <label>
+            Analytics
+            <div class="toggle-switch">
+                <input type="checkbox" id="analyticsToggle" checked>
+                <span class="slider"></span>
+            </div>
+        </label>
+        <label>
+            Marketing
+            <div class="toggle-switch">
+                <input type="checkbox" id="marketingToggle" checked>
+                <span class="slider"></span>
+            </div>
+        </label>
+    </div>
+
+    <div class="cookie-buttons">
+        <button class="allow-all-button" onclick="closePopup(); acceptAll()">Allow All </button>
+        <button class="allow-selection-button" onclick="closePopup(); allowSelection()">Allow Selection</button>
+        <button class="deny-all-button" onclick="closePopup(); denyAll()">Deny All  </button>
+    </div>
+</div>
+
+
+</body>
+</html>

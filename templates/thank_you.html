@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="/static/FairyStyleSheet.css">   
+    <script type="text/javascript">
+        // get back end data about products in context
+        var analytics_items = {{ purchased_items | tojson | safe }};
+        var analytics_value = {{ total_price }};
+    </script>
+    <script src="/static/analytics.js"></script>
+    <script src="/static/consent_update.js"></script>
+    
+    <title>Thank you</title>
+</head>
+<body>
+    <h1>Thank You for Your Purchase!</h1>
+    {% if purchased_items %}
+    <h2>Your Items:</h2>
+    <ul>
+        {% for item in purchased_items %}
+            <li>{{ item.item_name }} - ${{ item.price }} x {{ item.quantity }}</li>
+        {% endfor %}
+    </ul>
+
+        <p>Total: ${{ total_price }}</p>
+    {% else %}
+        <p>Your purchase could not be processed.</p>
+    {% endif %}
+
+<div> <a href="/" class="next"> Back to Home </a>
+<div class="cookie-banner" id="cookie-banner">
+
+    <p>This website uses cookies. Please select the types of cookies you want to accept:</p>
+    <div class="cookie-types">
+        <label> 
+            Strictly Necessary
+             <div class="toggle-switch">
+                <input type="checkbox" checked disabled>
+                <span class="slider"></span>   
+            </div>
+        </label>
+        <label>
+            Analytics
+            <div class="toggle-switch">
+                <input type="checkbox" id="analyticsToggle" checked>
+                <span class="slider"></span>
+            </div>
+        </label>
+        <label>
+            Marketing
+            <div class="toggle-switch">
+                <input type="checkbox" id="marketingToggle" checked>
+                <span class="slider"></span>
+            </div>
+        </label>
+    </div>
+
+    <div class="cookie-buttons">
+        <button class="allow-all-button" onclick="closePopup(); acceptAll()">Allow All </button>
+        <button class="allow-selection-button" onclick="closePopup(); allowSelection()">Allow Selection</button>
+        <button class="deny-all-button" onclick="closePopup(); denyAll()">Deny All  </button>
+    </div>
+</div>
+
+
+</body>
+</html>

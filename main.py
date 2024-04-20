@@ -1,6 +1,8 @@
-from flask import Flask, render_template, session, redirect, url_for, request, jsonify
+from flask import Flask, render_template, session, redirect, url_for, request, jsonify, make_response
 import os
-
+import random
+import json
+from datetime import datetime, date, timedelta, timezone
 
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'a_default_secret_key')
@@ -18,6 +20,39 @@ products = {
 
 
 categories = products.keys()
+
+GA_MEASUREMENT_ID = "1L1YW7SZFP";
+ga_cookie_name = "_ga_"+GA_MEASUREMENT_ID;
+client_ids = []
+filename = 'client_ids.json'
+
+def load_client_ids():
+    """ Load client IDs from JSON file if it exists. """
+    if os.path.exists(filename):
+        with open(filename, 'r') as f:
+            return json.load(f)
+    return []
+
+
+@app.before_request
+def handle_client_id():
+    if request.endpoint != 'static':
+        client_ids = load_client_ids()
+        is_returning_user = random.random() < 0.5  # 50% chance
+        client_id = None
+
+        if is_returning_user and client_ids:
+            client_id = random.choice(client_ids)
+
+        if client_id:
+            response = make_response(redirect(request.path))
+            expiration_time = datetime.now(tz=timezone.utc) + timedelta(days=365)
+            expiration = expiration_time.strftime('%a, %d-%b-%Y %H:%M:%S GMT')
+            response.set_cookie('_ga', client_id["_ga"], expires=expiration)
+            response.set_cookie(f"_ga_{GA_MEASUREMENT_ID}", client_id[f"_ga_{GA_MEASUREMENT_ID}"], expires=expiration)
+            response.set_cookie('cookie_consent', "111", expires=expiration)
+            return response
+
 
 @app.route('/')
 def home():
@@ -104,7 +139,6 @@ def checkout():
     return redirect(url_for('thank_you'))
 
 
-
 @app.route('/thank-you')
 def thank_you():
     purchased_items = session.pop('purchased_items', [])
@@ -117,11 +151,5 @@ def thank_you():
 
 
 if __name__ == "__main__":
-    # This is used when running locally only. When deploying to Google App
-    # Engine, a webserver process such as Gunicorn will serve the app. This
-    # can be configured by adding an `entrypoint` to app.yaml.
-    # Flask's development server will automatically serve static files in
-    # the "static" directory. See:
-    # http://flask.pocoo.org/docs/1.0/quickstart/#static-files. Once deployed,
-    # App Engine itself will serve those files as configured in app.yaml.
+    # This is used when running locally only. 
     app.run(host="127.0.0.1", port=8080, debug=True)

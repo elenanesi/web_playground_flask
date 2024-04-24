@@ -27,7 +27,7 @@ client_ids = []
 filename = 'client_ids.json'
 
 def load_client_ids():
-    """ Load client IDs from JSON file if it exists. """
+    # Load client IDs from JSON file if it exists.
     if os.path.exists(filename):
         with open(filename, 'r') as f:
             return json.load(f)
@@ -36,7 +36,9 @@ def load_client_ids():
 
 @app.before_request
 def handle_client_id():
-    if request.endpoint != 'static':
+    # If request is an actual page request
+    cookie_consent = request.cookies.get('cookie_consent')
+    if request.endpoint != 'static' and cookie_consent is None:
         client_ids = load_client_ids()
         is_returning_user = random.random() < 0.5  # 50% chance
         client_id = None

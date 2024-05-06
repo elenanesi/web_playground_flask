@@ -2,46 +2,48 @@
 const GTM_ID = "GTM-WZ4DNGJW";
 //Add your own GA measurement ID, skip the "G-" prefix
 const GA_MEASUREMENT_ID = "1L1YW7SZFP";
+//Add the ID of your cookie banner HTML element below
+const cookie_banner_id = "cookie-banner"
 const ga_cookie_name = "_ga_"+GA_MEASUREMENT_ID;
 
 
-function getCookie(name) {
-  var cookieString = document.cookie;
-  var cookies = cookieString.split("; ");
-  for (var i = 0; i < cookies.length; i++) {
-    var cookie = cookies[i].split("=");
-    var cookieName = cookie[0];
-    var cookieValue = cookie[1];
+function getCookie(name){
+  var cookies = document.cookie.split("; ");
+  var i = 0;
+  var l = cookies.length;
+  var cookie, cookieName, cookieValue;
+  for (i = 0; i < l; i++) {
+    cookie = cookies[i].split("=");
+    cookieName = cookie[0];
+    cookieValue = cookie[1];
     if (cookieName === name) {
       return cookieValue;
     }
   }
   return null; // Return null if cookie not found
-}
+  }
 
-function setCookie(name, value, days) {
+function setCookie(name, value, days){
     var domain = window.location.hostname;
     // Extract the main domain by removing subdomains, if any
     // var mainDomain = domain.includes('.') ? domain.substring(domain.lastIndexOf('.', domain.lastIndexOf('.') - 1) + 1) : domain;
-
+    var date
     var expires = "";
     if (days) {
-        var date = new Date();
+        date = new Date();
         date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
         expires = "; expires=" + date.toUTCString();
     }
 
     // Include the domain in the cookie string
     document.cookie = name + "=" + (value || "") + expires + "; path=/; domain=" + domain;
-}
+  }
 
-
-
-function closePopup() { 
-  var Popup = document.getElementById("cookie-banner");
+function closePopup(){ 
+  var Popup = document.getElementById(cookie_banner_id);
   Popup.style.display = "none";
   //document.querySelector('.overlay').style.display = 'none';
-}
+  }
 
 function acceptAll(){
         // Define dataLayer and the gtag function.
@@ -54,7 +56,7 @@ function acceptAll(){
           'analytics_storage': 'granted'
         });
         setCookie("cookie_consent", "11", 365)
-    };
+  }
 
 function denyAll(){
     // Define dataLayer and the gtag function.
@@ -68,7 +70,7 @@ function denyAll(){
       'analytics_storage': 'denied'
     });
     setCookie("cookie_consent", "00")
-};
+  }
 
 function allowSelection(){
     var analyticsToggle = document.getElementById('analyticsToggle')  || "denied";
@@ -89,7 +91,7 @@ function allowSelection(){
       'ad_personalization': ad_storage,
       'analytics_storage': analytics_storage
     });
-};
+  }
 
 function returningUser(clientIds){
   var randomClient = clientIds[Math.floor(Math.random() * clientIds.length)];
@@ -98,12 +100,16 @@ function returningUser(clientIds){
   // assuming cookie consent has been given in the past
   acceptAll()
   console.log("returning user", randomClient[ga_cookie_name])
-    }
+  }
 
 function pdp_analytics() {
     window.dataLayer.push({
       'content_group': 'product_detail'
     });
+
+    if (document.referrer.indexOf(document.location.host)>=0) {
+      select_item(analytics_items);
+    }
 
     window.dataLayer.push({ ecommerce: null });  // Clear the previous ecommerce object.
     window.dataLayer.push({
@@ -114,17 +120,24 @@ function pdp_analytics() {
         items: [analytics_items]
       }
     });
-
-
-}
+  }
 
 function plp_analytics() {
   window.dataLayer.push({
     'content_group': 'product_category'
   })
-}
+  dataLayer.push({ ecommerce: null });  // Clear the previous ecommerce object.
+  dataLayer.push({
+    event: "view_item_list",
+    ecommerce: {
+      item_list_id: "product_category",
+      item_list_name: "product_category",
+      items: analytics_items
+    }
+  });
+  }
 
-function checkout_analytics() {
+function checkout_analytics(){
   window.dataLayer.push({
     'content_group': 'checkout'
   });
@@ -138,9 +151,9 @@ function checkout_analytics() {
   }
 });
 
-}
+  }
 
-function purchase_analytics() {
+function purchase_analytics(){
     var url = window.location.pathname;
     var category = url.split('/')[2]
 
@@ -159,11 +172,20 @@ function purchase_analytics() {
       shipping: 2.99,
       currency: "EUR",
       coupon: "SUMMER_SALE",
-      items: [analytics_items]
+      items: analytics_items
   }
 });
+  }
 
-}
+function select_item(){
+  dataLayer.push({ ecommerce: null });  // Clear the previous ecommerce object.
+  dataLayer.push({
+    event: "select_item",
+    ecommerce: {
+      items: [analytics_items]
+    }
+  });
+  }
 
 function add_to_cart(category, productName){
   fetch(`/add_to_cart/${category}/${productName}`, {
@@ -172,18 +194,8 @@ function add_to_cart(category, productName){
         'Content-Type': 'application/json',
         // Include CSRF token header if needed
     },
-    // No need to send body data for this request as info is in URL
   })
   .then(response => response.json())
-/*  .then(data => {
-      if (data.status === 'success') {
-          alert(data.message);
-          // Optionally update the cart display or badge here
-      } else {
-          alert(data.message);
-      }
-  })
-  */
   .catch(error => {
       console.error('Error:', error);
   });
@@ -199,7 +211,7 @@ function add_to_cart(category, productName){
       items: [analytics_items]
     }
   });
-}
+  }
 
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
@@ -229,21 +241,21 @@ if (/^\/$/.test(urlPath)) {
   })
 }
 else if (/cart/.test(urlPath)) {
-  console.log("checkout!")
+  console.log("checkout page")
   checkout_analytics()
 }
 
 else if (/thank/.test(urlPath)) {
-  console.log("purchase!")
+  console.log("purchase page")
   purchase_analytics()
 }
 
 else if (/\/category/.test(urlPath)) {
-  console.log("plp!")
+  console.log("plp page")
   plp_analytics()
 }
 
 else if (/\/\w+\/\w+(\/)?/.test(urlPath)) {
-  console.log("pdp!")
+  console.log("pdp page")
   pdp_analytics()
 }

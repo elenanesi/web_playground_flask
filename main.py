@@ -21,10 +21,15 @@ products = {
 
 categories = products.keys()
 
+# GA4 MEASUREMENT ID, needed to create cookies for simulation of returning users
 GA_MEASUREMENT_ID = "1L1YW7SZFP";
+# name of the file where client_ids are stored for simulation purposes
+filename = 'client_ids.json'
+# max number of client_ids that can be saved in the file
+ids_max = 1000
+
 ga_cookie_name = "_ga_"+GA_MEASUREMENT_ID;
 client_ids = []
-filename = 'client_ids.json'
 
 def load_client_ids():
     # Load client IDs from JSON file if it exists.
@@ -33,28 +38,66 @@ def load_client_ids():
             return json.load(f)
     return []
 
+# Add a function to save the client IDs to the file when they're written after a request
+def save_client_ids(client_ids):
+    with open(filename, 'w') as f:
+        json.dump(client_ids, f)
 
 @app.before_request
-def handle_client_id():
-    # If request is an actual page request
-    cookie_consent = request.cookies.get('cookie_consent')
-    if request.endpoint != 'static' and cookie_consent is None:
-        client_ids = load_client_ids()
+def returning_user_setup():
+    # the following cookie is set everytime consent.js loads (every page)
+    cookie_banner = request.cookies.get('cookie_banner_loaded')
+    # If request is an actual page request and this is the first page
+    if request.endpoint != 'static' and cookie_banner is None:
+        # decide if user is going to be new or returning   
         is_returning_user = random.random() < 0.5  # 50% chance
         client_id = None
 
-        if is_returning_user and client_ids:
-            client_id = random.choice(client_ids)
+        if is_returning_user:
+            # if returning user, then get old ids from file and pick one to setup as a cookie
+            # (hence simulating a returning user)
+            client_ids = load_client_ids()
+            if len(client_ids) > 0:
+                client_id = random.choice(client_ids)
 
         if client_id:
+            # if returning user and everything above went OK, set the cookies
             response = make_response(redirect(request.path))
             expiration_time = datetime.now(tz=timezone.utc) + timedelta(days=365)
             expiration = expiration_time.strftime('%a, %d-%b-%Y %H:%M:%S GMT')
-            response.set_cookie('_ga', client_id["_ga"], expires=expiration)
-            response.set_cookie(f"_ga_{GA_MEASUREMENT_ID}", client_id[f"_ga_{GA_MEASUREMENT_ID}"], expires=expiration)
-            response.set_cookie('cookie_consent', "111", expires=expiration)
+            domain = request.host  # Extracts domain
+            response.set_cookie('_ga', client_id["_ga"], expires=expiration, path='/', domain=domain)
+            response.set_cookie(ga_cookie_name, client_id[ga_cookie_name], expires=expiration, path='/', domain=domain)
+            response.set_cookie('cookie_consent', "111", expires=expiration, domain=domain)
+            print(f"----- DEBUG- returning user branch: {client_id[ga_cookie_name]}")
             return response
 
+@app.route('/user_saved')
+def new_user_setup():
+    print("-- DEBUG new_user_setup")
+    # get the ga cookies
+    response = make_response('', 204)
+    ga_cookie = request.cookies.get('_ga') 
+    ga_MID_cookie = request.cookies.get(ga_cookie_name)
+    
+    # if they exist, load client ids and check its length
+    if ga_cookie and ga_MID_cookie:
+        client_ids = load_client_ids()
+        # if length is OK, push values in the file
+        if len(client_ids) < ids_max:
+            data_value = {'_ga': ga_cookie, ga_cookie_name: ga_MID_cookie}
+            # if data_value is not empty and not already existing, write the new ID in the list
+            if data_value and not any(data_value == existing for existing in client_ids):
+                client_ids.append(data_value)
+                save_client_ids(client_ids)  # Use the save function which handles file operation
+                
+                # Setting the 'user_saved' cookie to prevent re-execution
+                # domain = request.host
+                # response.set_cookie('user_saved', "1", max_age=31536000, path='/', domain=domain)  # Set for 1 year
+                response.set_cookie('user_saved', "1", max_age=31536000, path='/')
+                return response  # No content response
+
+    return response  # No content response
 
 @app.route('/')
 def home():

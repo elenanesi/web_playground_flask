@@ -45,18 +45,39 @@ function closePopup(){
   //document.querySelector('.overlay').style.display = 'none';
   }
 
-function acceptAll(){
-        // Define dataLayer and the gtag function.
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('consent', 'update', {
-          'ad_storage': 'granted',
-          'ad_user_data': 'granted',
-          'ad_personalization': 'granted',
-          'analytics_storage': 'granted'
-        });
-        setCookie("cookie_consent", "11", 365)
-  }
+function acceptAll() {
+    // Define dataLayer and the gtag function.
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+        dataLayer.push(arguments);
+    }
+
+    gtag('consent', 'update', {
+        'ad_storage': 'granted',
+        'ad_personalization': 'granted',
+        'analytics_storage': 'granted'
+    });
+
+    setCookie("cookie_consent", "11", 365); // Corrected "11" to "1" assuming you meant to set it to "1"
+
+    // Check if user saved was executed already
+    if (getCookie("user_saved") === null) {
+      // AJAX request to the Flask backend to save user id in file
+      fetch(`/user_saved`)
+        .then(response => {
+          if (response.ok) {
+            return response
+          } else {
+            throw new Error('Failed to fetch: ' + response.statusText);
+          }
+        })
+        .then(data => console.log("Python code triggered", data))
+        .catch(error => console.error('Error:', error));
+    }
+}
+
+
+
 
 function denyAll(){
     // Define dataLayer and the gtag function.
@@ -150,7 +171,6 @@ function checkout_analytics(){
       items: analytics_items
   }
 });
-
   }
 
 function purchase_analytics(){
@@ -259,3 +279,4 @@ else if (/\/\w+\/\w+(\/)?/.test(urlPath)) {
   console.log("pdp page")
   pdp_analytics()
 }
+

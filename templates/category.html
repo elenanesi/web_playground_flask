@@ -5,6 +5,8 @@
     <script type="text/javascript">
         // get back end data about products in contex
         var analytics_items = {{ products | tojson | safe }};
+        // get back end data about products in contex
+        window.clientId = {{ g.get('client_id') | tojson }} || 0;
     </script>
     <script src="/static/analytics.js"></script>
     <script src="/static/consent_update.js"></script>

@@ -3,6 +3,10 @@
 
 <head>
 	 <title>Home</title>
+     <script type="text/javascript">
+         // get back end data about products in contex
+        window.clientId = {{ g.get('client_id') | tojson }} || 0;
+     </script>
 
     <link rel="stylesheet" type="text/css" href="/static/FairyStyleSheet.css">
    

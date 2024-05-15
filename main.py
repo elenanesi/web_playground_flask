@@ -1,20 +1,23 @@
-from flask import Flask, render_template, session, redirect, url_for, request, jsonify, make_response
+# local version
+from flask import Flask, render_template, session, redirect, url_for, request, jsonify, make_response, g
 import os
 import random
 import json
 from datetime import datetime, date, timedelta, timezone
+from flask import jsonify, abort, session
+import copy 
 
 app = Flask(__name__)
-app.secret_key = os.getenv('FLASK_SECRET_KEY', 'a_default_secret_key')
+app.secret_key = os.urandom(24)
 
 products = {
     'electronics': [
-        {'item_id': 1, 'item_name': 'Laptop', 'item_category': 'electronics', 'price': 800, 'quantity': 0, 'description': 'High-performance laptop.', 'image': 'url_to_image'},
-        {'item_id': 2, 'item_name': 'Smartphone', 'item_category': 'electronics', 'price': 500, 'quantity': 0, 'description': 'Latest model smartphone.', 'image': 'url_to_image'},
+        {'item_id': 1, 'item_name': 'Laptop', 'item_category': 'electronics', 'price': 800, 'quantity': 1, 'description': 'High-performance laptop.', 'image': 'url_to_image'},
+        {'item_id': 2, 'item_name': 'Smartphone', 'item_category': 'electronics', 'price': 500, 'quantity': 1, 'description': 'Latest model smartphone.', 'image': 'url_to_image'},
     ],
     'clothing': [
-        {'item_id': 1, 'item_name': 'T-Shirt', 'item_category': 'clothing', 'price': 20, 'quantity': 0, 'description': 'Cotton t-shirt.', 'image': 'url_to_image'},
-        {'item_id': 2, 'item_name': 'Jeans', 'item_category': 'clothing', 'price': 40, 'quantity': 0, 'description': 'Denim jeans.', 'image': 'url_to_image'},
+        {'item_id': 1, 'item_name': 'T-Shirt', 'item_category': 'clothing', 'price': 20, 'quantity': 1, 'description': 'Cotton t-shirt.', 'image': 'url_to_image'},
+        {'item_id': 2, 'item_name': 'Jeans', 'item_category': 'clothing', 'price': 40, 'quantity': 1, 'description': 'Denim jeans.', 'image': 'url_to_image'},
     ]
 }
 
@@ -50,30 +53,24 @@ def returning_user_setup():
     # If request is an actual page request and this is the first page
     if request.endpoint != 'static' and cookie_banner is None:
         # decide if user is going to be new or returning   
-        is_returning_user = random.random() < 0.5  # 50% chance
+        is_returning_user = random.random() < 0.3  # 30% chance
         client_id = None
 
         if is_returning_user:
+            print("-- DEBUG returning_user_setup")
             # if returning user, then get old ids from file and pick one to setup as a cookie
             # (hence simulating a returning user)
             client_ids = load_client_ids()
-            if len(client_ids) > 0:
+            if client_ids:
                 client_id = random.choice(client_ids)
-
-        if client_id:
-            # if returning user and everything above went OK, set the cookies
-            response = make_response(redirect(request.path))
-            expiration_time = datetime.now(tz=timezone.utc) + timedelta(days=365)
-            expiration = expiration_time.strftime('%a, %d-%b-%Y %H:%M:%S GMT')
-            domain = request.host  # Extracts domain
-            response.set_cookie('_ga', client_id["_ga"], expires=expiration, path='/', domain=domain)
-            response.set_cookie(ga_cookie_name, client_id[ga_cookie_name], expires=expiration, path='/', domain=domain)
-            response.set_cookie('cookie_consent', "111", expires=expiration, domain=domain)
-            print(f"----- DEBUG- returning user branch: {client_id[ga_cookie_name]}")
-            return response
+                if client_id:     
+                    # make client_id available under window 
+                    # so analytics.js can use it to set a cookie before GA library loads
+                    g.client_id = client_id
 
 @app.route('/user_saved')
 def new_user_setup():
+    # used to populate client_ids.json
     print("-- DEBUG new_user_setup")
     # get the ga cookies
     response = make_response('', 204)
@@ -118,9 +115,6 @@ def product_detail(category, product_name):
     if product is None:
         abort(404)
     return render_template('product_detail.html', product=product, category=category)
-
-from flask import jsonify, abort, session
-import copy  # Import the copy module if you need deep copy
 
 @app.route('/add_to_cart/<category>/<product_name>', methods=['POST'])
 def add_to_cart(category, product_name):

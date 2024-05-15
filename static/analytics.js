@@ -76,9 +76,6 @@ function acceptAll() {
     }
 }
 
-
-
-
 function denyAll(){
     // Define dataLayer and the gtag function.
     window.dataLayer = window.dataLayer || [];
@@ -231,8 +228,19 @@ function add_to_cart(category, productName){
       items: [analytics_items]
     }
   });
-  }
+}
 
+// --------------------------------- END of AUX function
+// --------------------------------- START main code
+
+// set cookies for returning users
+if (window.clientId!=0 && window.clientId!=undefined){
+  setCookie("_ga", window.clientId[0], 365)
+  setCookie(ga_cookie_name, window.clientId[1], 365)
+  setCookie("cookie_consent", "11", 365)
+}
+
+// dataLayer, CoMo and GTM setup
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 
@@ -252,6 +260,8 @@ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer',GTM_ID);
+
+// content group DL pushes
 
 const urlPath = window.location.pathname;
 if (/^\/$/.test(urlPath)) {

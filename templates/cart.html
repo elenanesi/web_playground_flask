@@ -5,7 +5,7 @@
     <script type="text/javascript">
         // get back end data about products in context
         var analytics_items = {{ cart | tojson | safe }};
-        console.log("hey ele ", analytics_items)
+        window.clientId = {{ g.get('client_id') | tojson }} || 0;
     </script>
     <script src="/static/analytics.js"></script>
     <script src="/static/consent_update.js"></script>

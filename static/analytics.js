@@ -1,10 +1,20 @@
-//Add your own GTM ID
-const GTM_ID = "GTM-WZ4DNGJW";
 //Add your own GA measurement ID, skip the "G-" prefix
 const GA_MEASUREMENT_ID = "1L1YW7SZFP";
+const ga_cookie_name = "_ga_"+GA_MEASUREMENT_ID;
+
+// set cookies for returning users
+if (window.clientId!=0 && window.clientId!=undefined){
+  setCookie("_ga", window.clientId["_ga"], 365)
+  setCookie(ga_cookie_name, window.clientId[ga_cookie_name], 365)
+  setCookie("cookie_consent", "11", 365)
+}
+
+//Add your own GTM ID
+const GTM_ID = "GTM-WZ4DNGJW";
+
 //Add the ID of your cookie banner HTML element below
 const cookie_banner_id = "cookie-banner"
-const ga_cookie_name = "_ga_"+GA_MEASUREMENT_ID;
+
 
 
 function getCookie(name){
@@ -232,13 +242,6 @@ function add_to_cart(category, productName){
 
 // --------------------------------- END of AUX function
 // --------------------------------- START main code
-
-// set cookies for returning users
-if (window.clientId!=0 && window.clientId!=undefined){
-  setCookie("_ga", window.clientId[0], 365)
-  setCookie(ga_cookie_name, window.clientId[1], 365)
-  setCookie("cookie_consent", "11", 365)
-}
 
 // dataLayer, CoMo and GTM setup
 window.dataLayer = window.dataLayer || [];

@@ -1,5 +1,5 @@
 # local version
-from flask import Flask, render_template, session, redirect, url_for, request, jsonify, make_response, g
+from flask import Flask, render_template, session, redirect, url_for, request, jsonify, make_response, g, Response, abort
 import os
 import random
 import json
@@ -188,6 +188,29 @@ def thank_you():
         total_price += product['price'] * purchase_item['quantity']
     return render_template('thank_you.html', purchased_items=purchased_items, total_price=total_price)
 
+@app.route('/sitemap.xml')
+def sitemap():
+    return Response(render_template('sitemap.xml'), mimetype='application/xml')
+
+@app.route('/sitemap-products.xml')
+def sitemap_products():
+    product_urls = []
+    for category, items in products.items():
+        for item in items:
+            product_urls.append(f"http://localhost:8080/{category}/{item['item_name']}/")
+    return Response(render_template('sitemap_products.xml', products=product_urls), mimetype='application/xml')
+
+@app.route('/sitemap-product-categories.xml')
+def sitemap_product_categories():
+    category_urls = [f"http://localhost:8080/{category}/" for category in categories]
+    return Response(render_template('sitemap_product_categories.xml', categories=category_urls), mimetype='application/xml')
+
+@app.route('/sitemap-others.xml')
+def sitemap_others():
+    others = [
+        'http://localhost:8080/'
+    ]
+    return Response(render_template('sitemap_others.xml', others=others), mimetype='application/xml')
 
 if __name__ == "__main__":
     # This is used when running locally only. 

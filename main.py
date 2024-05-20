@@ -189,10 +189,12 @@ def thank_you():
     return render_template('thank_you.html', purchased_items=purchased_items, total_price=total_price)
 
 @app.route('/sitemap.xml')
+# NOTE: change "localhost:8080 in the sitemap.xml file under /templates with your own domain"
 def sitemap():
     return Response(render_template('sitemap.xml'), mimetype='application/xml')
 
 @app.route('/sitemap-products.xml')
+# NOTE: change "localhost:8080 in the code below with your own domain"
 def sitemap_products():
     product_urls = []
     for category, items in products.items():
@@ -201,11 +203,14 @@ def sitemap_products():
     return Response(render_template('sitemap_products.xml', products=product_urls), mimetype='application/xml')
 
 @app.route('/sitemap-product-categories.xml')
+# NOTE: change "localhost:8080 in the code below with your own domain"
 def sitemap_product_categories():
-    category_urls = [f"http://localhost:8080/{category}/" for category in categories]
+    category_urls = [f"http://localhost:8080/category/{category}/" for category in categories]
     return Response(render_template('sitemap_product_categories.xml', categories=category_urls), mimetype='application/xml')
 
 @app.route('/sitemap-others.xml')
+# NOTE: change "localhost:8080 in the code below with your own domain"
+# NOTE: change others with the other URLs you want to include there"
 def sitemap_others():
     others = [
         'http://localhost:8080/'

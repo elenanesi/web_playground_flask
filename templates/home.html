@@ -2,7 +2,7 @@
 <html>
 
 <head>
-	 <title>Home</title>
+	<title>Home</title>
      <script type="text/javascript">
          // get back end data about products in contex
         window.clientId = {{ g.get('client_id') | tojson }} || 0;
@@ -15,53 +15,60 @@
 </head>
 
 <body>
-
-
-
 	<h1>Welcome to the Fairy Codemother Data Playground!</h1>
 	<p>This is a simple one page website created on localhost.</p>
+	<h2>Disclaimer</h2>
+    <p>This website was created solely for training purposes and does not represent a real entity or business activity. The information contained herein is fictional and should not be considered as legal, financial, or professional advice. Use of this website is at your own risk and discretion.</p>
+
     <h2>Shop by Category</h2>
     <ul>
         {% for category in categories %}
-            <li><a class= "next" href="{{ url_for('show_category', category=category) }}">{{ category.capitalize() }}</a></li>
+            <li><a class="next" href="{{ url_for('show_category', category=category) }}">{{ category.capitalize() }}</a></li>
         {% endfor %}
 
- 
- 
-<div class="cookie-banner" id="cookie-banner">
+    <div class="cookie-banner" id="cookie-banner">
+        <p>This website uses cookies. Please select the types of cookies you want to accept:</p>
+        <div class="cookie-types">
+            <label> 
+                Strictly Necessary
+                 <div class="toggle-switch">
+                    <input type="checkbox" checked disabled>
+                    <span class="slider"></span>   
+                </div>
+            </label>
+            <label>
+                Analytics
+                <div class="toggle-switch">
+                    <input type="checkbox" id="analyticsToggle" checked>
+                    <span class="slider"></span>
+                </div>
+            </label>
+            <label>
+                Marketing
+                <div class="toggle-switch">
+                    <input type="checkbox" id="marketingToggle" checked>
+                    <span class="slider"></span>
+                </div>
+            </label>
+        </div>
 
-    <p>This website uses cookies. Please select the types of cookies you want to accept:</p>
-    <div class="cookie-types">
-        <label> 
-            Strictly Necessary
-             <div class="toggle-switch">
-                <input type="checkbox" checked disabled>
-                <span class="slider"></span>   
-            </div>
-        </label>
-        <label>
-            Analytics
-            <div class="toggle-switch">
-                <input type="checkbox" id="analyticsToggle" checked>
-                <span class="slider"></span>
-            </div>
-        </label>
-        <label>
-            Marketing
-            <div class="toggle-switch">
-                <input type="checkbox" id="marketingToggle" checked>
-                <span class="slider"></span>
-            </div>
-        </label>
+        <div class="cookie-buttons">
+            <button class="allow-all-button" onclick="closePopup(); acceptAll()">Allow All </button>
+            <button class="allow-selection-button" onclick="closePopup(); allowSelection()">Allow Selection</button>
+            <button class="deny-all-button" onclick="closePopup(); denyAll()">Deny All  </button>
+        </div>
     </div>
-
-    <div class="cookie-buttons">
-        <button class="allow-all-button" onclick="closePopup(); acceptAll()">Allow All </button>
-        <button class="allow-selection-button" onclick="closePopup(); allowSelection()">Allow Selection</button>
-        <button class="deny-all-button" onclick="closePopup(); denyAll()">Deny All  </button>
-    </div>
-</div>
-
+<br><br><br><br>
 </body>
+    <footer>
+        <ul>
+
+             <li><a href="/static/privacy_policy.html">Privacy Policy</a></li>
+            <li><a href="/static/cookie_policy.html">Cookie Policy</a></li>
+            <li>
+            <p>© 2025 Training Website. All rights reserved. The contents of this website are fictional and created for training purposes. Unauthorized reproduction, distribution, or use of these materials is prohibited</p>
+        	</li>
+        </ul>
+    </footer>
 
 </html>

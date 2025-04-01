@@ -25,7 +25,7 @@ products = {
 categories = products.keys()
 
 # GA4 MEASUREMENT ID, needed to create cookies for simulation of returning users
-GA_MEASUREMENT_ID = "1L1YW7SZFP";
+GA_MEASUREMENT_ID = "0MD7HEDQ3S";
 # name of the file where client_ids are stored for simulation purposes
 filename = 'client_ids.json'
 # max number of client_ids that can be saved in the file
@@ -34,7 +34,7 @@ ids_max = 1000
 ga_cookie_name = "_ga_"+GA_MEASUREMENT_ID;
 client_ids = []
 
-def load_client_ids():
+def load_client_ids(filename):
     # Load client IDs from JSON file if it exists.
     if os.path.exists(filename):
         with open(filename, 'r') as f:
@@ -42,7 +42,7 @@ def load_client_ids():
     return []
 
 # Add a function to save the client IDs to the file when they're written after a request
-def save_client_ids(client_ids):
+def save_client_ids(client_ids, filename):
     with open(filename, 'w') as f:
         json.dump(client_ids, f)
 
@@ -50,17 +50,19 @@ def save_client_ids(client_ids):
 def returning_user_setup():
     # the following cookie is set everytime consent.js loads (every page)
     cookie_banner = request.cookies.get('cookie_banner_loaded')
+    print("Hello Ele, I'm returning_user_setup")
     # If request is an actual page request and this is the first page
     if request.endpoint != 'static' and cookie_banner is None:
         # decide if user is going to be new or returning   
-        is_returning_user = random.random() < 0.3  # 30% chance
+        is_returning_user = random.random() < 0.4  # 40% chance
+        print("User returning is: ", is_returning_user)
         client_id = None
 
         if is_returning_user:
             print("-- DEBUG returning_user_setup")
             # if returning user, then get old ids from file and pick one to setup as a cookie
             # (hence simulating a returning user)
-            client_ids = load_client_ids()
+            client_ids = load_client_ids(filename)
             if client_ids:
                 client_id = random.choice(client_ids)
                 if client_id:     
@@ -79,14 +81,14 @@ def new_user_setup():
     
     # if they exist, load client ids and check its length
     if ga_cookie and ga_MID_cookie:
-        client_ids = load_client_ids()
+        client_ids = load_client_ids(filename)
         # if length is OK, push values in the file
         if len(client_ids) < ids_max:
             data_value = {'_ga': ga_cookie, ga_cookie_name: ga_MID_cookie}
             # if data_value is not empty and not already existing, write the new ID in the list
             if data_value and not any(data_value == existing for existing in client_ids):
                 client_ids.append(data_value)
-                save_client_ids(client_ids)  # Use the save function which handles file operation
+                save_client_ids(client_ids, filename)  # Use the save function which handles file operation
                 
                 # Setting the 'user_saved' cookie to prevent re-execution
                 # domain = request.host

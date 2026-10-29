@@ -8,13 +8,23 @@
         // get back end data about products in contex
         window.clientId = {{ g.get('client_id') | tojson }} || 0;
     </script>
+    <script type="text/javascript">
+        (function () {
+            var match = document.cookie.match(/(?:^|;\s*)fc_user_id=([^;]*)/);
+            var userId = match ? decodeURIComponent(match[1]) : "";
+            if (userId && userId !== "null") {
+                window.dataLayer = window.dataLayer || [];
+                window.dataLayer.push({user_id: userId});
+            }
+        })();
+    </script>
     <script src="/static/analytics.js"></script>
     <script src="/static/consent_update.js"></script>
 
     <title>{{ category | capitalize }}</title>
 </head>
 <body>
-    <h1>{{ category | capitalize }}</h1>
+    <h1><span>{{ category_icons[category] }}</span> {{ category | capitalize }}</h1>
     <h2>Disclaimer</h2>
     <p>This website was created solely for training purposes and does not represent a real entity or business activity. The information contained herein is fictional and should not be considered as legal, financial, or professional advice. Use of this website is at your own risk and discretion.</p>
     <div>

@@ -180,6 +180,14 @@ function checkout_analytics(){
 });
   }
 
+function createTransactionId() {
+  // Date.now() collides whenever two purchases happen in the same millisecond.
+  if (window.crypto && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+}
+
 function purchase_analytics(){
     var url = window.location.pathname;
     var category = url.split('/')[2]
@@ -193,7 +201,7 @@ function purchase_analytics(){
   dataLayer.push({
   event: "purchase",
   ecommerce: {
-      transaction_id: Date.now(),
+      transaction_id: createTransactionId(),
       value: analytics_value,
       tax: analytics_value*0.1,
       shipping: 2.99,

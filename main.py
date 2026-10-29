@@ -12,13 +12,49 @@ app.secret_key = os.urandom(24)
 
 products = {
     'electronics': [
-        {'item_id': 1, 'item_name': 'Laptop', 'item_category': 'electronics', 'price': 800, 'quantity': 1, 'description': 'High-performance laptop.', 'image': 'url_to_image'},
-        {'item_id': 2, 'item_name': 'Smartphone', 'item_category': 'electronics', 'price': 500, 'quantity': 1, 'description': 'Latest model smartphone.', 'image': 'url_to_image'},
+        {'item_id': 1, 'item_name': 'Laptop', 'item_category': 'electronics', 'price': 800, 'quantity': 1, 'description': 'High-performance laptop.', 'image': '💻'},
+        {'item_id': 2, 'item_name': 'Smartphone', 'item_category': 'electronics', 'price': 500, 'quantity': 1, 'description': 'Latest model smartphone.', 'image': '📱'},
+        {'item_id': 3, 'item_name': 'Earbuds', 'item_category': 'electronics', 'price': 45, 'quantity': 1, 'description': 'Wireless earbuds with charging case.', 'image': '🎧'},
+        {'item_id': 4, 'item_name': 'Charger', 'item_category': 'electronics', 'price': 18, 'quantity': 1, 'description': 'Fast USB-C wall charger.', 'image': '🔌'},
+        {'item_id': 5, 'item_name': 'Monitor', 'item_category': 'electronics', 'price': 240, 'quantity': 1, 'description': '27-inch full HD monitor.', 'image': '🖥️'},
+        {'item_id': 6, 'item_name': 'Tablet', 'item_category': 'electronics', 'price': 55, 'quantity': 1, 'description': 'Compact tablet for reading and browsing.', 'image': '📲'},
     ],
     'clothing': [
-        {'item_id': 1, 'item_name': 'T-Shirt', 'item_category': 'clothing', 'price': 20, 'quantity': 1, 'description': 'Cotton t-shirt.', 'image': 'url_to_image'},
-        {'item_id': 2, 'item_name': 'Jeans', 'item_category': 'clothing', 'price': 40, 'quantity': 1, 'description': 'Denim jeans.', 'image': 'url_to_image'},
-    ]
+        {'item_id': 1, 'item_name': 'T-Shirt', 'item_category': 'clothing', 'price': 20, 'quantity': 1, 'description': 'Cotton t-shirt.', 'image': '👕'},
+        {'item_id': 2, 'item_name': 'Jeans', 'item_category': 'clothing', 'price': 40, 'quantity': 1, 'description': 'Denim jeans.', 'image': '👖'},
+        {'item_id': 7, 'item_name': 'Socks', 'item_category': 'clothing', 'price': 6, 'quantity': 1, 'description': 'Soft cotton socks.', 'image': '🧦'},
+        {'item_id': 8, 'item_name': 'Jacket', 'item_category': 'clothing', 'price': 95, 'quantity': 1, 'description': 'Water-resistant everyday jacket.', 'image': '🧥'},
+        {'item_id': 9, 'item_name': 'Sneakers', 'item_category': 'clothing', 'price': 120, 'quantity': 1, 'description': 'Lightweight running sneakers.', 'image': '👟'},
+        {'item_id': 10, 'item_name': 'Watch', 'item_category': 'clothing', 'price': 900, 'quantity': 1, 'description': 'Stainless steel luxury watch.', 'image': '⌚'},
+    ],
+    'home': [
+        {'item_id': 11, 'item_name': 'Mug', 'item_category': 'home', 'price': 8, 'quantity': 1, 'description': 'Ceramic coffee mug.', 'image': '☕'},
+        {'item_id': 12, 'item_name': 'Towel', 'item_category': 'home', 'price': 14, 'quantity': 1, 'description': 'Absorbent bath towel.', 'image': '🛁'},
+        {'item_id': 13, 'item_name': 'Blender', 'item_category': 'home', 'price': 55, 'quantity': 1, 'description': 'Countertop blender for smoothies.', 'image': '🥤'},
+        {'item_id': 14, 'item_name': 'Lamp', 'item_category': 'home', 'price': 38, 'quantity': 1, 'description': 'Warm-light desk lamp.', 'image': '💡'},
+        {'item_id': 15, 'item_name': 'Sofa', 'item_category': 'home', 'price': 1200, 'quantity': 1, 'description': 'Three-seater fabric sofa.', 'image': '🛋️'},
+    ],
+    'beauty': [
+        {'item_id': 16, 'item_name': 'Lipstick', 'item_category': 'beauty', 'price': 12, 'quantity': 1, 'description': 'Long-lasting matte lipstick.', 'image': '💄'},
+        {'item_id': 17, 'item_name': 'Shampoo', 'item_category': 'beauty', 'price': 9, 'quantity': 1, 'description': 'Gentle daily shampoo.', 'image': '🧴'},
+        {'item_id': 18, 'item_name': 'Perfume', 'item_category': 'beauty', 'price': 85, 'quantity': 1, 'description': 'Floral eau de parfum.', 'image': '🌸'},
+        {'item_id': 19, 'item_name': 'SkinSerum', 'item_category': 'beauty', 'price': 150, 'quantity': 1, 'description': 'Hydrating vitamin C face serum.', 'image': '💧'},
+    ],
+    'sports': [
+        {'item_id': 20, 'item_name': 'YogaMat', 'item_category': 'sports', 'price': 25, 'quantity': 1, 'description': 'Non-slip yoga mat.', 'image': '🧘'},
+        {'item_id': 21, 'item_name': 'Dumbbell', 'item_category': 'sports', 'price': 35, 'quantity': 1, 'description': 'Adjustable hand dumbbell.', 'image': '🏋️'},
+        {'item_id': 22, 'item_name': 'Cleats', 'item_category': 'sports', 'price': 60, 'quantity': 1, 'description': 'Football cleats for firm ground.', 'image': '⚽'},
+        {'item_id': 23, 'item_name': 'Treadmill', 'item_category': 'sports', 'price': 280, 'quantity': 1, 'description': 'Foldable home treadmill.', 'image': '🏃'},
+        {'item_id': 24, 'item_name': 'Bicycle', 'item_category': 'sports', 'price': 550, 'quantity': 1, 'description': 'Aluminium city bicycle.', 'image': '🚲'},
+    ],
+}
+
+category_icons = {
+    'electronics': '💻',
+    'clothing': '👕',
+    'home': '🏠',
+    'beauty': '💄',
+    'sports': '⚽',
 }
 
 
@@ -100,13 +136,13 @@ def new_user_setup():
 
 @app.route('/')
 def home():
-    return render_template('home.html', categories=categories)
+    return render_template('home.html', categories=categories, category_icons=category_icons)
 
 @app.route('/category/<category>/')
 def show_category(category):
     if category not in categories:
         abort(404)
-    return render_template('category.html', category=category, products=products[category])
+    return render_template('category.html', category=category, products=products[category], category_icons=category_icons)
 
 @app.route('/<category>/<product_name>/')
 def product_detail(category, product_name):

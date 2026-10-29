@@ -30,6 +30,13 @@ To view it:
 - To use your own tags, change `GTM_ID` and `GA_MEASUREMENT_ID` in `static/analytics.js`, and
   `GA_MEASUREMENT_ID` in `main.py` too.
 
+## User ID
+
+- If the first-party cookie `fc_user_id` is set (opaque ID like `FC000123`), every page pushes
+  `{user_id: <value>}` to the dataLayer before GTM loads; if absent, nothing is pushed.
+- Manual GTM step: in GTM-WZ4DNGJW, add a Data Layer Variable named `user_id` and map it to the `user_id`
+  field in the Google tag's (GA4 config tag's) configuration settings. Without this step, nothing reaches GA4.
+
 ## Scrapers and bots
 
 Scripts can't use the proxy's `localhost` address cleanly (GA would record `localhost`). Instead, send a

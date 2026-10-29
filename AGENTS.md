@@ -29,11 +29,22 @@ or JS bundlers. Use plain Flask, Jinja templates, one CSS file and vanilla JS.
 
 The site exists for analytics testing, so these are a public interface. Change them only on purpose and say so:
 
-- **URL paths.** `analytics.js` picks the page type from the path with regexes: `/`, `/category/<cat>/`,
-  `/<cat>/<product>/`, `/cart`, `/thank-you`.
+- **Page-type detection** (`static/analytics.js`, tested on the URL path in this order, first match wins):
+  1. `/^\/$/` → home
+  2. `/cart/` → checkout
+  3. `/thank/` → purchase
+  4. `/\/category/` → product list
+  5. `/\/\w+\/\w+(\/)?/` → product detail (`/<category>/<item_name>/`)
+- **Naming rule:** category and product names become URL path segments, so they must be single tokens
+  (`[A-Za-z0-9_]+`, no spaces or hyphens) and must never contain `cart`, `thank` or `category` (any case).
 - **Page `<title>`s**: Home, category name, product name, Checkout, Thank you.
 - **Script order** in `base.html`: `analytics_items` / `analytics_value` / `window.clientId` are defined
-  (via `{% block head_data %}`) **before** `analytics.js` loads.
+  (via `{% block head_data %}`), then the `fc_user_id` snippet runs, all **before** `analytics.js` loads.
+- **`products` dict** (`main.py`): `{category: [ {item_id, item_name, item_category, price, quantity, description, image}, ... ]}`.
+  `image` is a single emoji character, never a URL. Every category needs a matching entry in `category_icons`.
+- **`fc_user_id` cookie:** first-party cookie set by the external simulator, with opaque values like `FC000123`
+  (never emails or PII). Read client-side only. When set, every page pushes `{user_id: <value>}` to `dataLayer`
+  before GTM loads; when absent, nothing is pushed (never an empty string or `"null"`).
 - **DOM hooks**: `#cookie-banner`, `.cookie-banner`, `#analyticsToggle`, `#marketingToggle`, the banner
   `onclick` handlers, `#cart-count`. Link/button classes `next`, `cart`, `your-cart` and `checkout` may be
   used as GTM click triggers.
@@ -70,6 +81,9 @@ Without GCP credentials the returning-user feature just logs warnings. Everythin
 The live site runs on Cloud Run, deployed from source. The project, region, service, bucket, runtime service
 account and exact deploy command are in `.local/deploy.md`, which is gitignored (and listed in
 `.gcloudignore`). Do not copy any of them into a tracked file: the GitHub repo is public.
+
+App Engine is not used. Don't run `gcloud app deploy`: with no `--project` it targets whatever project is
+active in the local gcloud config, won't update the live site, and can create a new App Engine app there.
 
 - **Env vars:** `SECRET_KEY` (keeps carts stable across instances) and `BUCKET_NAME`.
 - **Runtime service account** needs `roles/storage.objectAdmin` on the bucket.

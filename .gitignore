@@ -1,7 +1,48 @@
+# macOS
 .DS_Store
-.claude/
+.AppleDouble
+.LSOverride
+._*
+
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
 .venv/
+env/
+*.egg-info/
+.eggs/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Secrets and local env
+.env
+.env.*
+!.env.example
+
+# Editors and OS junk
+.idea/
+.vscode/
+.claude/
+*.swp
+*~
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+*.log
+
+# Returning-user client ids (stored in GCS, never committed)
 client_ids.json
+
 # Local-only notes (deploy targets, never committed)
 .local/

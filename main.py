@@ -1,102 +1,106 @@
-# local version
 from flask import Flask, render_template, session, redirect, url_for, request, jsonify, make_response, g, Response, abort
+from werkzeug.middleware.proxy_fix import ProxyFix
 import os
 import random
 import json
-from datetime import datetime, date, timedelta, timezone
-from flask import jsonify, abort, session
-import copy 
+from google.cloud import storage
+
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+# Must be stable across workers/instances, otherwise the session (cart) gets lost
+app.secret_key = os.environ.get('SECRET_KEY', 'local-dev-only-secret')
+# Cloud Run sits behind a proxy: trust X-Forwarded-* so url_for(_external=True) emits https
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
+# item_id must be unique across categories: the cart dedupes on it
 products = {
     'electronics': [
-        {'item_id': 1, 'item_name': 'Laptop', 'item_category': 'electronics', 'price': 800, 'quantity': 1, 'description': 'High-performance laptop.', 'image': 'url_to_image'},
-        {'item_id': 2, 'item_name': 'Smartphone', 'item_category': 'electronics', 'price': 500, 'quantity': 1, 'description': 'Latest model smartphone.', 'image': 'url_to_image'},
+        {'item_id': 1, 'item_name': 'Laptop', 'item_category': 'electronics', 'price': 800, 'quantity': 1, 'description': 'High-performance laptop.', 'image': '💻'},
+        {'item_id': 2, 'item_name': 'Smartphone', 'item_category': 'electronics', 'price': 500, 'quantity': 1, 'description': 'Latest model smartphone.', 'image': '📱'},
     ],
     'clothing': [
-        {'item_id': 1, 'item_name': 'T-Shirt', 'item_category': 'clothing', 'price': 20, 'quantity': 1, 'description': 'Cotton t-shirt.', 'image': 'url_to_image'},
-        {'item_id': 2, 'item_name': 'Jeans', 'item_category': 'clothing', 'price': 40, 'quantity': 1, 'description': 'Denim jeans.', 'image': 'url_to_image'},
+        {'item_id': 3, 'item_name': 'T-Shirt', 'item_category': 'clothing', 'price': 20, 'quantity': 1, 'description': 'Cotton t-shirt.', 'image': '👕'},
+        {'item_id': 4, 'item_name': 'Jeans', 'item_category': 'clothing', 'price': 40, 'quantity': 1, 'description': 'Denim jeans.', 'image': '👖'},
     ]
 }
 
-
 categories = products.keys()
+category_icons = {'electronics': '⚡', 'clothing': '🧵'}
 
 # GA4 MEASUREMENT ID, needed to create cookies for simulation of returning users
-GA_MEASUREMENT_ID = "0MD7HEDQ3S";
-# name of the file where client_ids are stored for simulation purposes
-filename = 'client_ids.json'
+GA_MEASUREMENT_ID = "1L1YW7SZFP"
+# GCS location where client_ids are stored for simulation purposes
+BUCKET_NAME = os.environ.get('BUCKET_NAME', 'returning_user_simulation')
+BLOB_NAME = 'client_ids.json'
 # max number of client_ids that can be saved in the file
 ids_max = 1000
+# share of first-time visitors that get turned into a "returning" user
+RETURNING_USER_RATE = 0.4
+# pages where the returning user simulation can kick in
+PAGE_ENDPOINTS = {'home', 'show_category', 'product_detail', 'show_cart', 'thank_you'}
 
-ga_cookie_name = "_ga_"+GA_MEASUREMENT_ID;
-client_ids = []
+ga_cookie_name = "_ga_" + GA_MEASUREMENT_ID
 
-def load_client_ids(filename):
-    # Load client IDs from JSON file if it exists.
-    if os.path.exists(filename):
-        with open(filename, 'r') as f:
-            return json.load(f)
+
+def _blob():
+    return storage.Client().bucket(BUCKET_NAME).blob(BLOB_NAME)
+
+def load_client_ids():
+    # Never break the page if GCS is unreachable: just simulate no returning users
+    try:
+        blob = _blob()
+        if blob.exists():
+            return json.loads(blob.download_as_bytes())
+    except Exception as e:
+        app.logger.warning("Could not load client ids: %s", e)
     return []
 
-# Add a function to save the client IDs to the file when they're written after a request
-def save_client_ids(client_ids, filename):
-    with open(filename, 'w') as f:
-        json.dump(client_ids, f)
+def save_client_ids(client_ids):
+    try:
+        _blob().upload_from_string(json.dumps(client_ids), content_type="application/json")
+    except Exception as e:
+        app.logger.warning("Could not save client ids: %s", e)
+
 
 @app.before_request
 def returning_user_setup():
-    # the following cookie is set everytime consent.js loads (every page)
-    cookie_banner = request.cookies.get('cookie_banner_loaded')
-    print("Hello Ele, I'm returning_user_setup")
-    # If request is an actual page request and this is the first page
-    if request.endpoint != 'static' and cookie_banner is None:
-        # decide if user is going to be new or returning   
-        is_returning_user = random.random() < 0.4  # 40% chance
-        print("User returning is: ", is_returning_user)
-        client_id = None
+    # Decide once per browser (on its first page view) whether to simulate a returning user.
+    # Skip visitors that already have a real GA cookie, so we don't overwrite their identity.
+    if (request.endpoint not in PAGE_ENDPOINTS
+            or request.cookies.get('cookie_banner_loaded')
+            or request.cookies.get('_ga')):
+        return
+    g.first_page_view = True
+    if random.random() < RETURNING_USER_RATE:
+        client_ids = load_client_ids()
+        if client_ids:
+            # exposed as window.clientId, so analytics.js sets the GA cookies before GTM loads
+            g.client_id = random.choice(client_ids)
 
-        if is_returning_user:
-            print("-- DEBUG returning_user_setup")
-            # if returning user, then get old ids from file and pick one to setup as a cookie
-            # (hence simulating a returning user)
-            client_ids = load_client_ids(filename)
-            if client_ids:
-                client_id = random.choice(client_ids)
-                if client_id:     
-                    # make client_id available under window 
-                    # so analytics.js can use it to set a cookie before GA library loads
-                    g.client_id = client_id
+@app.after_request
+def mark_visitor_seen(response):
+    if g.get('first_page_view'):
+        response.set_cookie('cookie_banner_loaded', '1', max_age=31536000, path='/')
+    return response
 
 @app.route('/user_saved')
 def new_user_setup():
-    # used to populate client_ids.json
-    print("-- DEBUG new_user_setup")
-    # get the ga cookies
+    # used to populate client_ids.json with the GA cookies of consenting visitors
     response = make_response('', 204)
-    ga_cookie = request.cookies.get('_ga') 
+    ga_cookie = request.cookies.get('_ga')
     ga_MID_cookie = request.cookies.get(ga_cookie_name)
-    
-    # if they exist, load client ids and check its length
+
     if ga_cookie and ga_MID_cookie:
-        client_ids = load_client_ids(filename)
-        # if length is OK, push values in the file
+        client_ids = load_client_ids()
         if len(client_ids) < ids_max:
             data_value = {'_ga': ga_cookie, ga_cookie_name: ga_MID_cookie}
-            # if data_value is not empty and not already existing, write the new ID in the list
-            if data_value and not any(data_value == existing for existing in client_ids):
+            if data_value not in client_ids:
                 client_ids.append(data_value)
-                save_client_ids(client_ids, filename)  # Use the save function which handles file operation
-                
+                save_client_ids(client_ids)
                 # Setting the 'user_saved' cookie to prevent re-execution
-                # domain = request.host
-                # response.set_cookie('user_saved', "1", max_age=31536000, path='/', domain=domain)  # Set for 1 year
                 response.set_cookie('user_saved', "1", max_age=31536000, path='/')
-                return response  # No content response
 
-    return response  # No content response
+    return response
 
 @app.route('/')
 def home():
@@ -112,8 +116,7 @@ def show_category(category):
 def product_detail(category, product_name):
     if category not in categories:
         abort(404)
-    product_list = products[category]
-    product = next((item for item in product_list if item["item_name"] == product_name), None)
+    product = next((item for item in products[category] if item["item_name"] == product_name), None)
     if product is None:
         abort(404)
     return render_template('product_detail.html', product=product, category=category)
@@ -125,100 +128,70 @@ def add_to_cart(category, product_name):
     product = next((item for item in products[category] if item["item_name"] == product_name), None)
     if product is None:
         return jsonify({'status': 'error', 'message': 'Product not found'}), 404
-    
-    if 'cart' not in session:
-        session['cart'] = []
-    
-    # Create a copy of the product to work with
-    aux = product.copy()  # This creates a shallow copy of the product dictionary
-    
-    # Initialize quantity for the copy if adding to cart for the first time
-    aux['quantity'] = 1  # Set quantity to 1 for the new item
 
-    # Check if the product is already in the cart
-    found = False
-    for cart_item in session['cart']:
-        if cart_item['item_id'] == aux["item_id"]:  # Assuming item_id is unique and exists
+    cart = session.setdefault('cart', [])
+    for cart_item in cart:
+        if cart_item['item_id'] == product['item_id']:
             cart_item['quantity'] += 1
-            found = True
             break
-    
-    if not found:
-        session['cart'].append(aux)  # Append the copy, not the original
-    
+    else:
+        cart.append({**product, 'quantity': 1})
+
     session.modified = True
-    return jsonify({'status': 'success', 'message': 'Product added to cart'})
+    return jsonify({'status': 'success', 'message': 'Product added to cart', 'cart_count': cart_count(cart)})
 
+def cart_total(items):
+    return sum(item['price'] * item['quantity'] for item in items)
 
+def cart_count(items):
+    return sum(item['quantity'] for item in items)
+
+@app.context_processor
+def inject_globals():
+    # used by the shared header in base.html
+    return {'cart_count': cart_count(session.get('cart', [])), 'nav_categories': categories, 'category_icons': category_icons}
 
 @app.route('/empty_cart')
 def empty_cart():
-    if 'cart' not in session:
-        return redirect(url_for('show_cart'))
-    else:
-        session['cart'] = []
-        session.modified = True
-        return redirect(url_for('show_cart'))
+    session['cart'] = []
+    return redirect(url_for('show_cart'))
 
 @app.route('/cart')
 def show_cart():
     cart_items = session.get('cart', [])
-    total_price = 0
-    for cart_item in cart_items:
-        product = next(item for category, items in products.items() for item in items if item["item_name"] == cart_item['item_name'])
-
-        total_price += product['price'] * cart_item['quantity']
-    
-    return render_template('cart.html', cart=cart_items, total_price=total_price)
-
+    return render_template('cart.html', cart=cart_items, total_price=cart_total(cart_items))
 
 @app.route('/checkout', methods=['POST'])
 def checkout():
-    # Ensure the cart is treated as a dictionary here as well
-    cart_items = session.pop('cart', {})
-    session['purchased_items'] = cart_items  # Directly assign the dictionary
+    session['purchased_items'] = session.pop('cart', [])
     return redirect(url_for('thank_you'))
-
 
 @app.route('/thank-you')
 def thank_you():
     purchased_items = session.pop('purchased_items', [])
-    total_price = 0
-    for purchase_item in purchased_items:
-        product = next(item for category, items in products.items() for item in items if item["item_name"] == purchase_item['item_name'])
-
-        total_price += product['price'] * purchase_item['quantity']
-    return render_template('thank_you.html', purchased_items=purchased_items, total_price=total_price)
+    return render_template('thank_you.html', purchased_items=purchased_items, total_price=cart_total(purchased_items))
 
 @app.route('/sitemap.xml')
-# NOTE: change "localhost:8080 in the sitemap.xml file under /templates with your own domain"
 def sitemap():
     return Response(render_template('sitemap.xml'), mimetype='application/xml')
 
 @app.route('/sitemap-products.xml')
-# NOTE: change "localhost:8080 in the code below with your own domain"
 def sitemap_products():
-    product_urls = []
-    for category, items in products.items():
-        for item in items:
-            product_urls.append(f"http://localhost:8080/{category}/{item['item_name']}/")
+    product_urls = [url_for('product_detail', category=category, product_name=item['item_name'], _external=True)
+                    for category, items in products.items() for item in items]
     return Response(render_template('sitemap_products.xml', products=product_urls), mimetype='application/xml')
 
 @app.route('/sitemap-product-categories.xml')
-# NOTE: change "localhost:8080 in the code below with your own domain"
 def sitemap_product_categories():
-    category_urls = [f"http://localhost:8080/category/{category}/" for category in categories]
+    category_urls = [url_for('show_category', category=category, _external=True) for category in categories]
     return Response(render_template('sitemap_product_categories.xml', categories=category_urls), mimetype='application/xml')
 
 @app.route('/sitemap-others.xml')
-# NOTE: change "localhost:8080 in the code below with your own domain"
-# NOTE: change others with the other URLs you want to include there"
+# NOTE: add here any other URLs you want to include
 def sitemap_others():
-    others = [
-        'http://localhost:8080/'
-    ]
+    others = [url_for('home', _external=True)]
     return Response(render_template('sitemap_others.xml', others=others), mimetype='application/xml')
 
 if __name__ == "__main__":
-    # This is used when running locally only. 
-    app.run(host="127.0.0.1", port=8080, debug=True)
+    # This is used when running locally only.
+    app.run(host="127.0.0.1", port=int(os.environ.get('PORT', 8080)), debug=True)

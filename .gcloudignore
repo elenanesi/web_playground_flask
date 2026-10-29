@@ -17,3 +17,9 @@
 __pycache__/
 # Ignored by the build system
 /setup.cfg
+# macOS / local files
+.DS_Store
+client_ids.json
+.claude/
+# Local-only notes
+.local/

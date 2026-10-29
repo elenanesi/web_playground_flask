@@ -6,6 +6,7 @@ const ga_cookie_name = "_ga_"+GA_MEASUREMENT_ID;
 if (window.clientId!=0 && window.clientId!=undefined){
   setCookie("_ga", window.clientId["_ga"], 365)
   setCookie(ga_cookie_name, window.clientId[ga_cookie_name], 365)
+  setCookie("_ga_0MD7HEDQ3S", window.clientId[ga_cookie_name], 365)
   setCookie("cookie_consent", "11", 365)
 }
 
@@ -223,6 +224,14 @@ function add_to_cart(category, productName){
     },
   })
   .then(response => response.json())
+  .then(data => {
+    // update the cart badge in the header
+    var badge = document.getElementById('cart-count');
+    if (badge && data.cart_count !== undefined) {
+      badge.textContent = data.cart_count;
+      badge.classList.remove('bump'); void badge.offsetWidth; badge.classList.add('bump');
+    }
+  })
   .catch(error => {
       console.error('Error:', error);
   });

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <sitemap>
-        <loc>http://localhost:8080/sitemap-products.xml</loc>
+        <loc>{{ url_for('sitemap_products', _external=True) }}</loc>
     </sitemap>
     <sitemap>
-        <loc>http://localhost:8080/sitemap-product-categories.xml</loc>
+        <loc>{{ url_for('sitemap_product_categories', _external=True) }}</loc>
     </sitemap>
     <sitemap>
-        <loc>http://localhost:8080/sitemap-others.xml</loc>
+        <loc>{{ url_for('sitemap_others', _external=True) }}</loc>
     </sitemap>
 </sitemapindex>

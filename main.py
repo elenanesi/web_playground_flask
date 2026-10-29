@@ -20,8 +20,8 @@ products = {
         {'item_id': 6, 'item_name': 'Tablet', 'item_category': 'electronics', 'price': 55, 'quantity': 1, 'description': 'Compact tablet for reading and browsing.', 'image': '📲'},
     ],
     'clothing': [
-        {'item_id': 1, 'item_name': 'T-Shirt', 'item_category': 'clothing', 'price': 20, 'quantity': 1, 'description': 'Cotton t-shirt.', 'image': '👕'},
-        {'item_id': 2, 'item_name': 'Jeans', 'item_category': 'clothing', 'price': 40, 'quantity': 1, 'description': 'Denim jeans.', 'image': '👖'},
+        {'item_id': 25, 'item_name': 'TShirt', 'item_category': 'clothing', 'price': 20, 'quantity': 1, 'description': 'Cotton t-shirt.', 'image': '👕'},
+        {'item_id': 26, 'item_name': 'Jeans', 'item_category': 'clothing', 'price': 40, 'quantity': 1, 'description': 'Denim jeans.', 'image': '👖'},
         {'item_id': 7, 'item_name': 'Socks', 'item_category': 'clothing', 'price': 6, 'quantity': 1, 'description': 'Soft cotton socks.', 'image': '🧦'},
         {'item_id': 8, 'item_name': 'Jacket', 'item_category': 'clothing', 'price': 95, 'quantity': 1, 'description': 'Water-resistant everyday jacket.', 'image': '🧥'},
         {'item_id': 9, 'item_name': 'Sneakers', 'item_category': 'clothing', 'price': 120, 'quantity': 1, 'description': 'Lightweight running sneakers.', 'image': '👟'},

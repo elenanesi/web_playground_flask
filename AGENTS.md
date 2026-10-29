@@ -22,8 +22,6 @@
 
 ## Redeploy
 
-Runs on Google App Engine (`app.yaml`). Redeploy with:
+`app.yaml` is an App Engine config. `gcloud app deploy` (no `--project`) targets whatever project is active in the local gcloud config. That is not how the live site is shipped, and running it can create a new App Engine app in the active project.
 
-```
-gcloud app deploy
-```
+The live target, region, and deploy command are in `.local/deploy.md`. That file is gitignored (and listed in `.gcloudignore`). Do not copy the project id, service name, or bucket into any tracked file: the GitHub repo is public.

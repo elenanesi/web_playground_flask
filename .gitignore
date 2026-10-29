@@ -39,3 +39,6 @@ Desktop.ini
 
 # Logs
 *.log
+
+# Local-only notes (deploy targets, never committed)
+.local/
